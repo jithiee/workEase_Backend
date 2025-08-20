@@ -28,31 +28,31 @@ class CustomUserManager(BaseUserManager):
             raise ValueError("Superuser must have is_superuser=True.")
 
         return self.create_user(email, password, **extra_fields)
-
+    
 #----------- Custom user Model ----------------
 
-class CustomUser(AbstractUser):
-    USER_TYPES = (
-        ('user', 'User'),        
-        ('employee', 'Employee')
-    )
 
-    username = models.CharField(max_length=15, unique=True)
+class CustomUser(AbstractUser):
+   
+    USER_TYPES = (
+        ('user', 'User'),
+        ('employee', 'Employee'),
+    )
+    
     email = models.EmailField(unique=True)
-    phone_number = models.CharField(max_length=15, unique=True)
+    phone_number = models.CharField(max_length=20, unique=True)
     user_type = models.CharField(max_length=10, choices=USER_TYPES, default='user')
 
     is_verified = models.BooleanField(default=False)
     otp = models.CharField(max_length=6, blank=True, null=True)
 
     USERNAME_FIELD = 'email'
-    REQUIRED_FIELDS = ['phone_number', 'username']
+    REQUIRED_FIELDS = ['username', 'phone_number'] 
 
     objects = CustomUserManager()
 
     def __str__(self):
         return f"{self.user_type} - {self.email}"
-
 
 #---------------- EMPLOYEE PROFILE ----------------
 
