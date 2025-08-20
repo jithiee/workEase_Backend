@@ -1,11 +1,9 @@
-import random
 from django.db import models
 from django.contrib.auth.models import AbstractUser, BaseUserManager
-from twilio.rest import Client
-import random
- 
 
-# Custom user manager
+
+#----------- Custom user manager--------------
+
 class CustomUserManager(BaseUserManager):
     def create_user(self, email, password=None, **extra_fields):
         if not email:
@@ -31,21 +29,21 @@ class CustomUserManager(BaseUserManager):
 
         return self.create_user(email, password, **extra_fields)
 
-# Custom user model
+#----------- Custom user Model ----------------
+
 class CustomUser(AbstractUser):
     USER_TYPES = (
-        ('user', 'User'),
-        ('employee', 'Employee'),
+        ('user', 'User'),        
+        ('employee', 'Employee')
     )
 
-    username = models.CharField(max_length=15 , unique=True)
+    username = models.CharField(max_length=15, unique=True)
     email = models.EmailField(unique=True)
     phone_number = models.CharField(max_length=15, unique=True)
     user_type = models.CharField(max_length=10, choices=USER_TYPES, default='user')
 
     is_verified = models.BooleanField(default=False)
     otp = models.CharField(max_length=6, blank=True, null=True)
-    
 
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = ['phone_number', 'username']
@@ -53,18 +51,44 @@ class CustomUser(AbstractUser):
     objects = CustomUserManager()
 
     def __str__(self):
-        return self.email
-    
-    
-    
-    
-    
+        return f"{self.user_type} - {self.email}"
 
 
+#---------------- EMPLOYEE PROFILE ----------------
+
+class EmployeeProfile(models.Model):
+    user = models.OneToOneField(CustomUser, on_delete=models.CASCADE, related_name="employee_profile")
+    full_name = models.CharField(max_length=100, blank=True, null=True)
+    profile_title = models.CharField(max_length=100, blank=True, null=True)
+    bio = models.TextField(blank=True, null=True)
+    profile_picture = models.ImageField(upload_to='profile_pics/', blank=True, null=True)
+    hourly_rate = models.DecimalField(max_digits=6, decimal_places=2, blank=True, null=True)
+    location = models.CharField(max_length=100, blank=True, null=True)
+    is_available = models.BooleanField(default=True)
+    skills = models.ManyToManyField("Skill", blank=True)
+
+    def __str__(self):
+        return f"Employee: {self.full_name or self.user.email}"
 
 
+#---------------- USER PROFILE ----------------
+
+class UserProfile(models.Model):
+    user = models.OneToOneField(CustomUser, on_delete=models.CASCADE, related_name="user_profile")
+    full_name = models.CharField(max_length=100, blank=True, null=True)
+    profile_picture = models.ImageField(upload_to='user_pics/', blank=True, null=True)
+    address = models.CharField(max_length=255, blank=True, null=True)
+    location = models.CharField(max_length=100, blank=True, null=True)
 
 
+    def __str__(self):
+        return f"User: {self.full_name or self.user.email}"
 
 
-  
+# ---------------- SKILLS ----------------
+
+class Skill(models.Model):
+    name = models.CharField(max_length=50, unique=True)
+
+    def __str__(self):
+        return self.name
